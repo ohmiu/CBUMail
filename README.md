@@ -1,3 +1,5 @@
+# In development right now
+
 # CBUMail - Secure and Privacy-Focused Email Server
 
 CBUMail is an integrated email server that combines SMTP (Simple Mail Transfer Protocol), WebMail, and MDA (Mail Delivery Agent). It is designed with a primary focus on ensuring maximum security and privacy for users. The server is written in Python 3, making it modern, efficient, and easy to deploy.
