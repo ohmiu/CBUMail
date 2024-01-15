@@ -1,3 +1,4 @@
 aiosmtpd==1.4.4
+colorama
 pycryptodome
 jxdb
