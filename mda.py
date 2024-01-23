@@ -11,14 +11,15 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 
-# Example:
-# attachments = [
-#     {'name': 'example.txt', 'mime_type': 'text/plain', 'content': b'Example'},
-# ]
+"""
+Example:
+attachments = [
+    {'name': 'example.txt', 'mime_type': 'text/plain', 'content': b'Example'},
+]
 
-# send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!', attachments)
-# send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!') - Without attachments
-
+send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!', attachments)
+send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!') - Without attachments
+"""
 
 logging.basicConfig(level=logging.INFO,
                     format='[ MailDeliveryAgent ] - [%(levelname)s] - %(message)s')
@@ -95,7 +96,7 @@ class MailDeliveryAgent:
                 return logging.error('No MX servers available')
             if not check_smtp_tls_support(mxserver, RPORT):
                 return logging.critical('Can not send email - TLS error')
-        # -----------------------------------------------------------------
+
         message = MIMEMultipart()
         message['From'] = sender_addr
         message['To'] = recipient_addr
