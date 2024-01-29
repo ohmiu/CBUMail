@@ -1,5 +1,6 @@
 import argparse
 import re
+import logging
 import os
 import hashlib
 from jxdb import JsonDB
