@@ -11,23 +11,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 
-"""
-Example:
-attachments = [
-    {'name': 'example.txt', 'mime_type': 'text/plain', 'content': b'Example'},
-]
-
-send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!', attachments)
-send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!') - Without attachments
-"""
-
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.WARNING,
                     format='[ MailDeliveryAgent ] - [%(levelname)s] - %(message)s')
 
 
 def is_port_open(host, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(3)
+    sock.settimeout(1)
     result = sock.connect_ex((host, port))
     sock.close()
     if result == 0:
@@ -80,14 +70,14 @@ class dig:
 
 class MailDeliveryAgent:
 
-    def send_mail(sender_addr: str, recipient_addr: str, subject: str, message_body: str, attachments=[]):
+    def send_mail(sender_addr: str, recipient_addr: str, subject: str, message_body: str, attachments=[], password=None):
         _, recipient_domain = recipient_addr.split('@')
         mxservers = dig.lookup(recipient_domain)
         if not mxservers == []:
             mxserver = random.choice(mxservers)
             logging.info(f'Choosed {mxserver}')
 
-            for port in [587, 465, 25]:
+            for port in [25, 465, 587]:
                 if is_port_open(mxserver, port):
                     RPORT=port
                     break
@@ -120,9 +110,10 @@ class MailDeliveryAgent:
             with smtplib.SMTP(mxserver, RPORT) as server:
                 server.starttls()
                 server.ehlo()
+                if not password == None:
+                    server.login(sender_addr, password)
                 server.sendmail(sender_addr, recipient_addr, message.as_string())
 
             logging.info('Email sent successfully')
         except Exception as e:
             logging.error(f'Error sending email: {e}')
-

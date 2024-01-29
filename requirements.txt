@@ -1,4 +1,5 @@
-aiosmtpd==1.4.4
-colorama
+aiosmtpd==1.4.4.post2
 pycryptodome
+colorama
+bcrypt
 jxdb
