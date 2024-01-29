@@ -18,7 +18,7 @@ CBUMail places a strong emphasis on security and privacy, offering the following
 
 - **TLS Encryption:** All communications, including emails in transit and user interactions with the WebMail interface, are encrypted using TLS. This encryption helps protect sensitive information from unauthorized access.
 
-- **End-To-End Encryption:** RSA is used in conjunction with Fernet to protect the mailbox from 3rd party access, no one but the WebMail user can access the mailbox and decrypt the emails.
+- **End-To-End Encryption:** RSA is used in conjunction with ChaCha20-poly1305 to protect the mailbox from 3rd party access, no one but the WebMail user can access the mailbox and decrypt the emails.
 
 - **Secure Deployment:** The server is designed to be deployed in a secure manner.
 
