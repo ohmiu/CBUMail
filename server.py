@@ -141,7 +141,7 @@ class CustomAuthHandler:
             else:
                 return '535 Incorrect auth data'
         except Exception as e:
-            print(e)
+            logging.error(str(e))
             return '500 Internal Server Error or data format is invalid'
 
 
