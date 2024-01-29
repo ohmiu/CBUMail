@@ -181,6 +181,7 @@ class Handler:
             'utf-8')).decode('utf-8', errors='replace')
         
         attachments = []
+        blocked_attachments = []
 
         for part in mime_message.walk():
             if part.get_content_type() == 'text/plain':
@@ -206,23 +207,35 @@ class Handler:
                         except:
                             pass
 
-                    attachments.append({
-                        'name': part.get_filename(),
-                        'mime_type': content_type,
-                        'content': content
-                    })
+                    max_attachment_size = CONFIG['max_attachment_size'] * 1024 * 1024  # 15 MB в байтах
+                    if len(content) > max_attachment_size:
+                        blocked_attachments.append(f'{part.get_filename()} - {len(content) // (1024 * 1024)} MB')
+                    else:
+                        attachments.append({
+                            'name': part.get_filename(),
+                            'mime_type': content_type,
+                            'content': content
+                        })
 
         if not envelope.rcpt_tos[0].endswith('@' + CONFIG['server_hostname']):
             try:
                 mdasend.send_mail(envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text, attachments)
             except Exception as E:
+                logging.error(str(E))
                 return '554 5.4.0 Error: transaction failed'
         else:
             msg_id = str(uuid4())
             key = generator.randomkey()
+            ADD_DATA=''
+            if not blocked_attachments == []:
+                max_instr=str(CONFIG['max_attachment_size'])
+                ADD_DATA=f'The following attachments were not received because their size exceeds the size set by the server ({max_instr} MiB):'
+                for batt in blocked_attachments:
+                    ADD_DATA=ADD_DATA + f'\n{batt}'
             try:
-                save_message(envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text, attachments, msg_id, key)
-            except:
+                save_message(envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text+ADD_DATA, attachments, msg_id, key)
+            except Exception as SE:
+                logging.error(str(SE))
                 return '500 Internal server error'
 
         return '250 Message accepted for delivery'

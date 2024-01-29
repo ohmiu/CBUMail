@@ -9,5 +9,6 @@ CONFIG = {
     'hash_algo': "sha3-256",  # You can use: sha256, sha3-256, md5, sha1, sha224
     'session_activity_time': 30,  # Authorization session lifetime
     'logging_level': 'warn',  # Available variables: all, warn
-    'mda_use_only_verified_tls_certs': False # Check whether TLS certificates belong to hosts (True or False)
+    'mda_use_only_verified_tls_certs': False, # Check whether TLS certificates belong to hosts (True or False)
+    'max_attachment_size': 5 # Maximum attachment size in MiB
 }
