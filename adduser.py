@@ -1,8 +1,8 @@
 import argparse
 import re
-import logging
 import os
 import hashlib
+import logging
 from jxdb import JsonDB
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -56,10 +56,12 @@ def add_user(email, password):
         db.set(email+'/pubkey', pubkey)
         print('Public key saved')
         db.save(DB_PATH, DB_PASS)
+        print(f"[+] - User successfully added: {email}")
     except Exception as err:
+        db.delete_by_key(email)
+        db.save(DB_PATH, DB_PASS)
         print(str(err))
-
-    print(f"User successfully added: {email}")
+        print(f"Failed to add user: {email}")
 
 
 def main():
