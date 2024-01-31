@@ -1,8 +1,8 @@
 import argparse
 import re
+import logging
 import os
 import hashlib
-import logging
 from jxdb import JsonDB
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -25,13 +25,6 @@ else:
     logging.critical('Unknown hash algo - change it in config.py')
     os._exit(1)
 
-if not os.path.exists(DB_PATH):
-
-    def create_db():
-        db = JsonDB()
-        db.save(DB_PATH, DB_PASS)
-    create_db()
-
 
 def is_valid_email(email):
     email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
@@ -39,12 +32,18 @@ def is_valid_email(email):
 
 
 def add_user(email, password):
+    if not os.path.exists(DB_PATH):
+        def create_db():
+            db = JsonDB()
+            db.save(DB_PATH, DB_PASS)
+        create_db()
     try:
         db = JsonDB()
         print('Generating key pair (RSA 4096)...')
         private_key = RSA.generate(4096)
         public_key = private_key.publickey()
-        privkey = private_key.export_key(passphrase=password, pkcs=8, protection="scryptAndAES128-CBC").decode()
+        privkey = private_key.export_key(
+            passphrase=password, pkcs=8, protection="scryptAndAES128-CBC").decode()
         pubkey = public_key.export_key().decode()
         db.open(DB_PATH, DB_PASS)
         passhash = HASH_ALGO(password.encode('utf-8')).hexdigest()
@@ -58,13 +57,10 @@ def add_user(email, password):
         db.save(DB_PATH, DB_PASS)
         print(f"[+] - User successfully added: {email}")
     except Exception as err:
-        db.delete_by_key(email)
-        db.save(DB_PATH, DB_PASS)
         print(str(err))
-        print(f"Failed to add user: {email}")
 
 
-def main():
+def base():
     parser = argparse.ArgumentParser(
         description='New user creation')
     parser.add_argument('email', type=str,
@@ -82,4 +78,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    base()

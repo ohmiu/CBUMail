@@ -53,13 +53,16 @@ else:
     logging.critical('Unknown hash algo - change it in config.py')
     os._exit(1)
 
+
 def add_padding(s):
     padding = b'=' * (len(s) % 4)
     return s + padding
 
+
 def session_timer(mailaddr: str):
     time.sleep(CONFIG['session_activity_time'])
     AUTHED_SESSIONS.remove(mailaddr)
+
 
 def check_password(mailaddr: str, hash: str):
     db = JsonDB()
@@ -69,6 +72,7 @@ def check_password(mailaddr: str, hash: str):
     else:
         return False
 
+
 def is_user_mail_address_exists(mail_addr: str):
     db = JsonDB()
     db.open(DB_PATH, DB_PASS)
@@ -77,10 +81,12 @@ def is_user_mail_address_exists(mail_addr: str):
     else:
         return False
 
+
 def get_user_public_key(mail_addr: str):
     db = JsonDB()
     db.open(DB_PATH, DB_PASS)
     return db.get(mail_addr+'/pubkey').encode()
+
 
 def save_message(from_addr, to_addr, subject, message, attachments, message_id, message_key):
     db = JsonDB()
@@ -91,9 +97,10 @@ def save_message(from_addr, to_addr, subject, message, attachments, message_id, 
 
     date_today = datetime.now().date()
     time_now = datetime.now().time()
-    encrypted_key = base64.b64encode(cipher.encrypt(message_key.encode())).decode()
+    encrypted_key = base64.b64encode(
+        cipher.encrypt(message_key.encode())).decode()
 
-    db.set(f'{to_addr}/message/{message_id}/key', encrypted_key) # DB key save
+    db.set(f'{to_addr}/message/{message_id}/key', encrypted_key)  # DB key save
 
     message_formated = f"""Message recieved
 Subject: {subject}
@@ -105,16 +112,17 @@ At {time_now}, {date_today}
 
     message_encrypted = senc.encrypt(message_formated, message_key)
 
-    db.set(f'{to_addr}/message/{message_id}', message_encrypted) # DB message save
-    
+    db.set(f'{to_addr}/message/{message_id}',
+           message_encrypted)  # DB message save
+
     for attachment in attachments:
         attachment_name = attachment['name']
         attachment_content = attachment['content']
         encrypted_content = senc.encrypt_bytes(attachment_content, message_key)
-        db.set(f'{to_addr}/message/{message_id}/{attachment_name}', encrypted_content)
-    
-    db.save(DB_PATH, DB_PASS)
+        db.set(f'{to_addr}/message/{message_id}/{attachment_name}',
+               encrypted_content)
 
+    db.save(DB_PATH, DB_PASS)
 
 
 context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -179,7 +187,7 @@ class Handler:
         _, _, subject_base64 = subject_encoded.partition('?utf-8?b?')
         subject_decoded = base64.b64decode(subject_base64.encode(
             'utf-8')).decode('utf-8', errors='replace')
-        
+
         attachments = []
         blocked_attachments = []
 
@@ -188,28 +196,33 @@ class Handler:
                 if part.get('Content-Transfer-Encoding') == 'base64':
                     decoded_text = base64.b64decode(
                         part.get_payload()).decode('utf-8', errors='replace')
+                else:
+                    decoded_text = part.get_payload()
             elif part.get_content_maintype() == 'multipart':
                 continue
             else:
                 content_type = part.get_content_type()
                 content_disposition = str(part.get("Content-Disposition"))
-                
+
                 if "attachment" in content_disposition or "inline" in content_disposition:
-                    content_transfer_encoding = part.get('Content-Transfer-Encoding')
+                    content_transfer_encoding = part.get(
+                        'Content-Transfer-Encoding')
                     content = part.get_payload(decode=True)
-                    
+
                     if content_transfer_encoding == 'base64':
                         try:
                             try:
                                 content = base64.b64decode(content)
                             except:
-                                content = base64.b64decode(add_padding(content))
+                                content = base64.b64decode(
+                                    add_padding(content))
                         except:
                             pass
 
-                    max_attachment_size = CONFIG['max_attachment_size'] * 1024 * 1024  # 15 MB в байтах
+                    max_attachment_size = CONFIG['max_attachment_size'] * 1024 * 1024
                     if len(content) > max_attachment_size:
-                        blocked_attachments.append(f'{part.get_filename()} - {len(content) // (1024 * 1024)} MB')
+                        blocked_attachments.append(
+                            f'{part.get_filename()} - {len(content) // (1024 * 1024)} MB')
                     else:
                         attachments.append({
                             'name': part.get_filename(),
@@ -219,21 +232,23 @@ class Handler:
 
         if not envelope.rcpt_tos[0].endswith('@' + CONFIG['server_hostname']):
             try:
-                mdasend.send_mail(envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text, attachments)
+                mdasend.send_mail(
+                    envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text, attachments)
             except Exception as E:
                 logging.error(str(E))
                 return '554 5.4.0 Error: transaction failed'
         else:
             msg_id = str(uuid4())
             key = generator.randomkey()
-            ADD_DATA=''
+            ADD_DATA = ''
             if not blocked_attachments == []:
-                max_instr=str(CONFIG['max_attachment_size'])
-                ADD_DATA=f'The following attachments were not received because their size exceeds the size set by the server ({max_instr} MiB):'
+                max_instr = str(CONFIG['max_attachment_size'])
+                ADD_DATA = f'The following attachments were not received because their size exceeds the size set by the server ({max_instr} MiB):'
                 for batt in blocked_attachments:
-                    ADD_DATA=ADD_DATA + f'\n{batt}'
+                    ADD_DATA = ADD_DATA + f'\n{batt}'
             try:
-                save_message(envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text+ADD_DATA, attachments, msg_id, key)
+                save_message(
+                    envelope.mail_from, envelope.rcpt_tos[0], subject_decoded, decoded_text+ADD_DATA, attachments, msg_id, key)
             except Exception as SE:
                 logging.error(str(SE))
                 return '500 Internal server error'
@@ -247,6 +262,7 @@ if __name__ == '__main__':
         handler, port=CPORT, server_hostname=CONFIG['server_hostname'], hostname=CONFIG['hostname'], tls_context=context, require_starttls=True, decode_data=True, enable_SMTPUTF8=True, auth_exclude_mechanism=['LOGIN'])
     banner.show()
     server.start()
-    print('\n' + Fore.YELLOW + f"Server started on {Fore.CYAN}{CONFIG['hostname']}:{CONFIG['port']}{Fore.YELLOW}, press {Fore.RED}ENTER{Fore.YELLOW} to stop" + Fore.RESET + '\n')
+    print('\n' + Fore.YELLOW +
+          f"Server started on {Fore.CYAN}{CONFIG['hostname']}:{CONFIG['port']}{Fore.YELLOW}, press {Fore.RED}ENTER{Fore.YELLOW} to stop" + Fore.RESET + '\n')
     input()
     server.stop()
