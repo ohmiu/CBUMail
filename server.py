@@ -187,6 +187,8 @@ class Handler:
         _, _, subject_base64 = subject_encoded.partition('?utf-8?b?')
         subject_decoded = base64.b64decode(subject_base64.encode(
             'utf-8')).decode('utf-8', errors='replace')
+        if subject_decoded == '':
+            subject_decoded = subject_encoded
 
         attachments = []
         blocked_attachments = []
