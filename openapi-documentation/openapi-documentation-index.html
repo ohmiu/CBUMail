@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>OpenAPI Documentation</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta charset="utf-8">
+</head>
+
+<body>
+
+  <h1>Документация OpenAPI</h1>
+
+  <h2>Введение</h2>
+  <p>Этот документ предоставляет простое и понятное руководство для разработчиков по использованию открытого API для безопасной почтовой системы. API включает функции управления пользователями, получения сообщений, проверки паролей и отправки почты.</p>
+
+  <h2>Конфигурация</h2>
+  <p>Убедитесь, что следующие настройки установлены в словаре `CONFIG` файла `openapi.py`:</p>
+  <ul>
+    <li><code>database_path</code>: Путь к файлу базы данных JSON (можно подсмотреть в config.py сервера, они должны совпадать).</li>
+    <li><code>database_password</code>: Пароль для доступа к базе данных JSON (можно подсмотреть в config.py сервера, они должны совпадать).</li>
+    <li><code>hash_algo</code>: Алгоритм хеширования для хеширования паролей.</li>
+    <li><code>scripts_path</code>: Путь, где расположены скрипты для импорта (это путь к папке сервера).</li>
+    <li><code>adduser_script_path</code>: Путь к скрипту для добавления новых пользователей (указывать так (пример для словаря <code>CONFIG</code>): <code>'adduser_script_path': '/var/scripts/adduser.py'</code>).</li>
+  </ul>
+
+  <h2>Функции</h2>
+
+  <h3><code>openapi.create_user(mailbox_addr, password)</code></h3>
+  <p>Создает нового пользователя с указанным адресом почтового ящика и паролем.</p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>openapi.create_user('user@example.com', 'secure_password')</code></pre>
+
+    <h3><code>openapi.delete_all_user_data(mailbox_addr)</code></h3>
+  <p>Удаляет все данные, связанные с почтовым ящиком указанного пользователя (включая самого пользователя).</p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>openapi.delete_all_user_data('user@example.com')</code></pre>
+
+  <h3><code>openapi.message(mail_addr, user_password, message_id)</code></h3>
+  <p>Расшифровывает и извлекает сообщение вместе с вложениями.</p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>message = openapi.message('user@example.com', 'user_password', 'uuid4-123a-ghdfh-test')
+print(message.text) # Пример сообщения 
+print(message.attachments)</code></pre>
+
+  <p>Объект <code>message.attachments</code> представляет из себя список вложений сообщения.</p>
+
+  <pre><code>attachments = [
+    {'name': 'example.txt', 'mime_type': 'text/plain', 'content': b'Example'},
+    {'name': 'image.jpg', 'mime_type': 'image/jpeg', 'content': b'...image data...'},
+    {'name': 'document.pdf', 'mime_type': 'application/pdf', 'content': b'...pdf data...'},
+    {/* Другие вложения */}
+  ]
+  </code></pre>
+
+  <p>Теперь мы можем обращаться к каждому вложению и использовать его данные:</p>
+
+  <pre><code>for attachment in message.attachments:
+    print(f'Name: {attachment.name}')
+    print(f'MIME Type: {attachment.mime_type}')
+    print(f'Content: {attachment.content}')
+  </code></pre>
+
+  <p>Обратите внимание, что в реальном коде вы бы использовали данные вложений согласно вашим потребностям.</p>
+
+  <h3><code>openapi.get_mailbox_messages(mail_addr)</code></h3>
+  <p>Извлекает список идентификаторов сообщений, связанных с указанным адресом почтового ящика.</p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>messages = openapi.get_mailbox_messages('user@example.com')
+print(messages)</code></pre>
+
+  <h3><code>openapi.check_password(mailaddr, password)</code></h3>
+  <p>Проверяет, соответствует ли предоставленный пароль хешированному паролю, хранящемуся в базе данных для указанного почтового ящика.</p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>is_valid = openapi.check_password('user@example.com', 'user_password')
+print(is_valid)</code></pre>
+
+  <h3><code>openapi.is_mailbox_exists(mail_addr)</code></h3>
+  <p>Проверяет, существует ли указанный адрес почтового ящика в системе.</p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>exists = openapi.is_mailbox_exists('user@example.com')
+print(exists) # True или False</code></pre>
+
+  <h3><code>openapi.mda.send_mail(sender, recipient, subject, body, attachments=[], password='ExamplePassword')</code></h3>
+  <p>Отправляет электронное письмо от отправителя получателю с указанным темой, текстом и прикрепленными файлами (по желанию).
+    Пароль необходимо указывать для sender. 
+  </p>
+  <p><strong>Пример:</strong></p>
+  <pre><code>attachments = [
+    {'name': 'example.txt', 'mime_type': 'text/plain', 'content': b'Example'},
+  ]
+  openapi.mda.send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!', attachments, password='ExamplePassword')
+  </code></pre>
+
+  <p><strong>Пример (без вложений):</strong></p>
+  <pre><code>openapi.mda.send_mail('sender@example.com', 'recipient@example.com', 'Test Subject', 'Hello, this is a test email!', password='ExamplePassword')</code></pre>
+
+  <p>Примечание: Убедитесь, что функция `openapi.mda.send_mail` правильно интегрирована с модулем почтового агента (`mda.py`).</p>
+
+</body>
+
+</html>

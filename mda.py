@@ -11,9 +11,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 
-logging.basicConfig(level=logging.WARNING,
-                    format='[ MailDeliveryAgent ] - [%(levelname)s] - %(message)s')
-
 
 def is_port_open(host, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,6 +23,7 @@ def is_port_open(host, port):
     else:
         logging.error(f'Port {port} inaccessible, skipping')
         return False
+
 
 def check_smtp_tls_support(smtp_server, smtp_port):
     try:
@@ -43,6 +41,7 @@ def check_smtp_tls_support(smtp_server, smtp_port):
     except Exception as e:
         logging.error('TLS unsupported - ' + str(e))
         return False
+
 
 class dig:
     def lookup(hostname: str):
@@ -67,7 +66,6 @@ class dig:
         return CA
 
 
-
 class MailDeliveryAgent:
 
     def send_mail(sender_addr: str, recipient_addr: str, subject: str, message_body: str, attachments=[], password=None):
@@ -79,14 +77,15 @@ class MailDeliveryAgent:
 
             for port in [25, 465, 587]:
                 if is_port_open(mxserver, port):
-                    RPORT=port
+                    RPORT = port
                     break
-                RPORT=None
+                RPORT = None
             if RPORT == None:
                 return logging.error('No MX servers available')
             if not check_smtp_tls_support(mxserver, RPORT):
                 return logging.critical('Can not send email - TLS error')
-
+        else:
+            return logging.critical('Not servers found')
         message = MIMEMultipart()
         message['From'] = sender_addr
         message['To'] = recipient_addr
@@ -96,13 +95,15 @@ class MailDeliveryAgent:
 
         for attachment in attachments:
             attachment_name = attachment.get('name', 'attachment')
-            attachment_mime_type = attachment.get('mime_type', 'application/octet-stream')
+            attachment_mime_type = attachment.get(
+                'mime_type', 'application/octet-stream')
             attachment_content = attachment.get('content', b'')
 
             part = MIMEBase('application', 'octet-stream')
             part.set_payload(attachment_content)
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename={attachment_name}')
+            part.add_header('Content-Disposition',
+                            f'attachment; filename={attachment_name}')
             message.attach(part)
 
         try:
@@ -112,7 +113,8 @@ class MailDeliveryAgent:
                 server.ehlo()
                 if not password == None:
                     server.login(sender_addr, password)
-                server.sendmail(sender_addr, recipient_addr, message.as_string())
+                server.sendmail(sender_addr, recipient_addr,
+                                message.as_string())
 
             logging.info('Email sent successfully')
         except Exception as e:
