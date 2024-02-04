@@ -3,3 +3,5 @@ pycryptodome
 colorama
 bcrypt
 jxdb
+pywebio
+pywebio-battery
