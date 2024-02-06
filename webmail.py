@@ -74,7 +74,6 @@ def sendmail():
         if not recipient.endswith(f'@'+wmconf['maildomain']):
             password = None
         close_popup()
-        toast('Messages accepted for delivery')
         try:
             mdasend.send_mail(login, recipient, subject, text, attachments, password)
             toast('Messages accepted for delivery')
