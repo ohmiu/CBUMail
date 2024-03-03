@@ -25,3 +25,7 @@ CBUMail places a strong emphasis on security and privacy, offering the following
 ## Deployment
 
 CBUMail is easy to deploy, thanks to its Python 3 implementation. The server can be set up on various platforms.
+
+Change settings in `config.py`
+
+Run `python server.py`
