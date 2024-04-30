@@ -74,7 +74,6 @@ def sendmail():
         if not recipient.endswith(f'@'+wmconf['maildomain']):
             password = None
         close_popup()
-        mdasend.send_mail(login, recipient, subject, text, attachments, password)
         toast('Messages accepted for delivery')
         try:
             mdasend.send_mail(login, recipient, subject, text, attachments, password)
@@ -115,6 +114,8 @@ def job(login, password):
             clear('loading')
     elif not get_query('del') == None:
         openapi.delete_message(login, get_query('del'))
+        put_loading(color='info')
+        put_text('Removing...')
         run_js('window.location.replace("/webmail?reload");')
     else:
         msg_id = get_query('msgid')

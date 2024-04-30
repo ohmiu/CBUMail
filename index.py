@@ -12,10 +12,6 @@ def main():
     if not str(get_cookie('wmauthdata')) == 'None':
         run_js('window.location.replace("/webmail?reload");')
         exit()
-    put_html('<h1>Welcome!<h1>', scope='base')
-    time.sleep(1)
-    clear('base')
-    put_html('<h1><img src="/static/wave.png" width="100" height="100" />WaveMail</h1>', scope='base')
-    put_link('Register', '/register')
-    put_text('')
-    put_link('Login', '/login')
+    else:
+        run_js('window.location.replace("/static/main/index.html");')
+        exit()
